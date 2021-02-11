@@ -29,7 +29,6 @@
 			<div v-if="loadingIndicator" class="loading-indicator">
 				<div class="icon-loading" />
 			</div>
-			<DatePicker v-if="pickDate" date="" is-all-day="true" />
 			<FullCalendar
 				ref="freeBusyFullCalendar"
 				:options="options" />
@@ -45,6 +44,10 @@
 				</div>
 			</div>
 		</div>
+		<DatePicker ref="datePicker"
+			:date="currentDate"
+			:is-all-day="true"
+			@change="setCurrentDate" />
 	</Modal>
 </template>
 
@@ -117,7 +120,7 @@ export default {
 	data() {
 		return {
 			loadingIndicator: true,
-			pickDate: false,
+			currentDate: this.startDate,
 		}
 	},
 	computed: {
@@ -205,26 +208,11 @@ export default {
 				// Data
 				eventSources: this.eventSources,
 				resources: this.resources,
-				// UI
-				customButtons: {
-				  datePicker: {
-				    text: this.$t('calendar', 'Pick a date'),
-						click: function() {
-				      // TODO: show date picker
-				      // https://github.com/fullcalendar/fullcalendar-vue/issues/126
-							// https://github.com/fullcalendar/fullcalendar-vue/issues/14
-							console.info(this, 'click', arguments)
-							this.showDatePicker()
-							const calendar = this.$refs.freeBusyFullCalendar.getApi()
-							calendar.gotoDate('2020-10-12')
-						}.bind(this),
-					},
-				},
-				headerToolbar: {
-					left: 'title',
-					center: '',
-					right: 'prev,next today datePicker',
-				},
+				// Events
+				datesSet: function({ start }) {
+				  // Keep the current date in sync
+					this.setCurrentDate(start, true)
+				}.bind(this),
 				// Plugins
 				plugins: this.plugins,
 				// Interaction:
@@ -242,12 +230,27 @@ export default {
 			}
 		},
 	},
+	mounted() {
+	  // Move file picker into the right header menu
+		// TODO: make this a slot once fullcalendar support it
+		//       ref https://github.com/fullcalendar/fullcalendar-vue/issues/14
+		//       ref https://github.com/fullcalendar/fullcalendar-vue/issues/126
+		const picker = this.$refs.datePicker
+		// Remove from original position
+		picker.$el.parentNode.removeChild(picker.$el)
+		// Insert into calendar
+		this.$el.querySelector('.fc-toolbar-chunk:last-child').appendChild(picker.$el)
+	},
 	methods: {
 		loading(isLoading) {
 			this.loadingIndicator = isLoading
 		},
-		showDatePicker() {
-			this.pickDate = true
+		setCurrentDate(date, updatedViaCalendar) {
+		  this.currentDate = date
+			if (!updatedViaCalendar) {
+				const calendar = this.$refs.freeBusyFullCalendar.getApi()
+				calendar.gotoDate(date)
+			}
 		},
 	},
 }
