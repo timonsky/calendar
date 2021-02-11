@@ -29,6 +29,7 @@
 			<div v-if="loadingIndicator" class="loading-indicator">
 				<div class="icon-loading" />
 			</div>
+			<DatePicker v-if="pickDate" date="" is-all-day="true" />
 			<FullCalendar
 				ref="freeBusyFullCalendar"
 				:options="options" />
@@ -69,6 +70,7 @@ import {
 	mapState,
 } from 'vuex'
 import Modal from '@nextcloud/vue/dist/Components/Modal'
+import DatePicker from '../../Shared/DatePicker'
 import { getColorForFBType } from '../../../utils/freebusy.js'
 import { getLocale } from '@nextcloud/l10n'
 import { getFirstDayOfWeekFromMomentLocale } from '../../../utils/moment.js'
@@ -77,6 +79,7 @@ export default {
 	name: 'FreeBusy',
 	components: {
 		FullCalendar,
+		DatePicker,
 		Modal,
 	},
 	props: {
@@ -114,6 +117,7 @@ export default {
 	data() {
 		return {
 			loadingIndicator: true,
+			pickDate: false,
 		}
 	},
 	computed: {
@@ -201,6 +205,26 @@ export default {
 				// Data
 				eventSources: this.eventSources,
 				resources: this.resources,
+				// UI
+				customButtons: {
+				  datePicker: {
+				    text: this.$t('calendar', 'Pick a date'),
+						click: function() {
+				      // TODO: show date picker
+				      // https://github.com/fullcalendar/fullcalendar-vue/issues/126
+							// https://github.com/fullcalendar/fullcalendar-vue/issues/14
+							console.info(this, 'click', arguments)
+							this.showDatePicker()
+							const calendar = this.$refs.freeBusyFullCalendar.getApi()
+							calendar.gotoDate('2020-10-12')
+						}.bind(this),
+					},
+				},
+				headerToolbar: {
+					left: 'title',
+					center: '',
+					right: 'prev,next today datePicker',
+				},
 				// Plugins
 				plugins: this.plugins,
 				// Interaction:
@@ -221,6 +245,9 @@ export default {
 	methods: {
 		loading(isLoading) {
 			this.loadingIndicator = isLoading
+		},
+		showDatePicker() {
+			this.pickDate = true
 		},
 	},
 }
